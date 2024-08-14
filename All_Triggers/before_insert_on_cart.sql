@@ -1,0 +1,27 @@
+create or replace TRIGGER before_insert_on_cart
+BEFORE INSERT ON CART
+FOR EACH ROW
+DECLARE
+    v_car_id USED_CAR.CAR_ID%TYPE;
+    v_dealer_id USED_CAR.DEALER_ID%TYPE;
+
+    v_reg_no USED_CAR.REGISTRATION_NUMBER%TYPE;
+BEGIN
+    v_reg_no := UPPER(:NEW.REGISTRATION_NUMBER);
+
+    SELECT CAR_ID INTO v_car_id
+    FROM USED_CAR
+    WHERE REGISTRATION_NUMBER = v_reg_no;
+
+    SELECT DEALER_ID INTO v_dealer_id
+    FROM USED_CAR
+    WHERE REGISTRATION_NUMBER = v_reg_no;
+
+    :NEW.REGISTRATION_NUMBER := UPPER(:NEW.REGISTRATION_NUMBER);
+    :NEW.DEALER_ID := v_dealer_id;
+    :NEW.CAR_ID := v_car_id;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20002, 'PREV_OWNER_ID or DEALER_ID not found in the respective tables.');
+END;
